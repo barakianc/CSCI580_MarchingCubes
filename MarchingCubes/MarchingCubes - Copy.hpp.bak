@@ -1,0 +1,144 @@
+#ifndef __MARCHING_CUBES_HPP__
+#define __MARCHING_CUBES_HPP__
+
+#include <iostream>
+#include <stdio.h>
+#include <conio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <vector>
+#include <cstring>
+
+#include <glm\glm.hpp>
+
+#include "Perlin_Noise.h"
+
+using namespace std;
+
+
+#define CubeLength 100
+
+typedef struct 
+{
+	int i,j,k,vertformat;
+	bool flipped;
+}Cube;
+
+struct intQueue
+{
+	int key;
+	intQueue * next;
+};
+
+struct vertNormal
+{
+	double n1, n2, n3;
+};
+
+typedef int McNode[3]; 
+typedef double McVertex[3];
+typedef int AdjacentNodes[3];
+typedef McVertex McFan[6];
+typedef McFan AllFans[4];
+typedef int Faces[3];
+
+
+const McNode N0 = {0, 0, 0};
+const McNode N1 = {1, 0, 0};
+const McNode N2 = {1, 1, 0};
+const McNode N3 = {0, 1, 0};
+const McNode N4 = {0, 0, 1};
+const McNode N5 = {1, 0, 1};
+const McNode N6 = {1, 1, 1};
+const McNode N7 = {0, 1, 1};
+
+const McFan emptyFan = 
+{
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0
+};
+
+const AllFans emptyAllFan = 
+{
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0,
+	-1.0, -1.0, -1.0
+};
+
+class MarchingCubesGenerator
+{
+public:
+	Cube***			cubes;
+	int				numCubes;				// number of cubes in one dimension
+	AllFans			lookUpTable[256];		// contains triangles for a cube
+	AllFans			lookUpNormTable[256];	// contains normals of triangles in a cube
+	int				lookUpFans[256];		// contains number of triangles in a fan
+	unsigned long	numTriangles;
+	unsigned long	numVerts;
+
+	MarchingCubesGenerator()
+	{
+		MarchingCubesGenerator(50);
+	}
+
+	MarchingCubesGenerator(int numCubes)
+	{
+		this->numCubes = numCubes;
+	}
+
+	~MarchingCubesGenerator()
+	{}
+	
+	void initCubes();
+
+	void initFans();
+	void findCorrectNormal(McVertex vert, McVertex normal, Cube ***cube, AllFans lookUpTable[256], AllFans lookUpNormTable[256], int lookUpFans[256], int x, int y, int z);
+
+private:
+	vertNormal *** allvertNormals;
+	bool *** allvertBools;
+
+	void onoff(bool*** on, float*** noise, Cube*** cubes);
+
+	void getTriangleFan(bool* nodesVal, AllFans allfans, int &numFans, AllFans allFansNorm);
+
+	int find_node_number(int x, int y, int z);
+	void getMcNode(int node_number, McNode mcNode);
+	int oppositeOf(int number);
+	void getAdjacentNodes(int nodeNumber, AdjacentNodes adj);
+	void getVertexBetween(int node1, int node2, McVertex mcVertex);
+	void getVertNormals(McFan fan_out, McFan fanNorm, int numberOfVerts, bool flipped, int onPoint);
+	void sortVerts(McFan fan_out, McFan fan_in, int numberOfVerts, McFan fanNorm, bool flipped, int onPoint);
+	void getTriangleFan(bool * nodesVal, AllFans allfans, int &numFans, AllFans allFansNorm, bool flipped);
+	void initAllVertNormals(int cubeSize);
+	void checkOrAdd(McVertex vert, McVertex normal, bool flipped);
+	void crossProduct(McVertex vec1, McVertex vec2, McVertex normal, bool flipped, McVertex vert0, McVertex vert1, McVertex vert2, bool &order);
+	void calcVertNormal(McVertex vert, Cube cube, McVertex normal, McVertex faceNormal);
+};
+
+#endif
